@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Descargar Naturalitos Acuario App - Sistema Punto de Venta Móvil</title>
+    <meta name="description" content="Descarga la aplicación oficial de Naturalitos Acuario para Android. Control de inventario, ventas, tickets y reportes en tiempo real.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-dark: #070e17;
+            --bg-card: rgba(15, 23, 42, 0.75);
+            --bg-card-hover: rgba(30, 41, 59, 0.85);
+            --aqua-primary: #06B6D4;
+            --aqua-accent: #10B981;
+            --aqua-gradient: linear-gradient(135deg, #06B6D4 0%, #10B981 100%);
+            --glow-aqua: rgba(6, 182, 212, 0.35);
+            --text-main: #F8FAFC;
+            --text-muted: #94A3B8;
+            --border-glow: rgba(56, 189, 248, 0.2);
+            --font-family: 'Plus Jakarta Sans', sans-serif;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: var(--font-family);
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            min-height: 100vh;
+            overflow-x: hidden;
+            position: relative;
+            background-image: 
+                radial-gradient(circle at 15% 20%, rgba(6, 182, 212, 0.12) 0%, transparent 40%),
+                radial-gradient(circle at 85% 65%, rgba(16, 185, 129, 0.12) 0%, transparent 45%),
+                radial-gradient(circle at 50% 90%, rgba(15, 23, 42, 0.9) 0%, transparent 50%);
+        }
+
+        /* Ambient Glow Bubbles */
+        .ambient-sphere {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(80px);
+            pointer-events: none;
+            z-index: 0;
+        }
+        .sphere-1 {
+            width: 400px;
+            height: 400px;
+            background: rgba(6, 182, 212, 0.15);
+            top: -100px;
+            left: -100px;
+        }
+        .sphere-2 {
+            width: 500px;
+            height: 500px;
+            background: rgba(16, 185, 129, 0.12);
+            bottom: 50px;
+            right: -150px;
+        }
+
+        /* Navigation Header */
+        header {
+            position: relative;
+            z-index: 10;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 24px 8%;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(12px);
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none;
+            color: inherit;
+        }
+
+        .brand-icon {
+            width: 44px;
+            height: 44px;
+            border-radius: 14px;
+            background: var(--aqua-gradient);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            box-shadow: 0 8px 20px var(--glow-aqua);
+        }
+
+        .brand-text h1 {
+            font-size: 1.25rem;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+            background: linear-gradient(180deg, #FFFFFF 0%, #CBD5E1 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .brand-text p {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+
+        .header-badge {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            padding: 6px 14px;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            color: #34D399;
+            font-weight: 600;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: #10B981;
+            box-shadow: 0 0 10px #10B981;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+            70% { transform: scale(1); box-shadow: 0 0 0 8px rgba(16, 185, 129, 0); }
+            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+        }
+
+        /* Hero Container */
+        .container {
+            position: relative;
+            z-index: 10;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 60px 24px 80px;
+            display: grid;
+            grid-template-columns: 1.15fr 0.85fr;
+            gap: 56px;
+            align-items: center;
+        }
+
+        @media (max-width: 960px) {
+            .container {
+                grid-template-columns: 1fr;
+                padding-top: 30px;
+                gap: 40px;
+            }
+        }
+
+        /* Hero Text & Actions */
+        .hero-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(6, 182, 212, 0.1);
+            border: 1px solid rgba(6, 182, 212, 0.25);
+            padding: 6px 16px;
+            border-radius: 9999px;
+            font-size: 0.82rem;
+            color: #38BDF8;
+            font-weight: 600;
+            margin-bottom: 24px;
+        }
+
+        .hero-title {
+            font-size: clamp(2.4rem, 5vw, 3.6rem);
+            font-weight: 800;
+            line-height: 1.15;
+            margin-bottom: 20px;
+            letter-spacing: -0.03em;
+        }
+
+        .hero-title span {
+            background: var(--aqua-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .hero-desc {
+            font-size: 1.1rem;
+            color: var(--text-muted);
+            line-height: 1.6;
+            margin-bottom: 36px;
+            max-width: 540px;
+        }
+
+        /* Main Download Button & Info */
+        .download-action-box {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            margin-bottom: 40px;
+        }
+
+        .btn-download {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 14px;
+            background: var(--aqua-gradient);
+            color: #041E24;
+            font-size: 1.15rem;
+            font-weight: 700;
+            padding: 18px 36px;
+            border-radius: 18px;
+            text-decoration: none;
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            box-shadow: 0 12px 30px rgba(6, 182, 212, 0.35);
+            max-width: fit-content;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-download:hover {
+            transform: translateY(-3px) scale(1.02);
+            box-shadow: 0 16px 40px rgba(6, 182, 212, 0.5);
+            color: #000;
+        }
+
+        .btn-download svg {
+            width: 24px;
+            height: 24px;
+            fill: currentColor;
+        }
+
+        .meta-info {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .meta-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .meta-item strong {
+            color: var(--text-main);
+        }
+
+        /* Features Cards Grid */
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+            margin-top: 10px;
+        }
+
+        @media (max-width: 540px) {
+            .features-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .feature-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-glow);
+            padding: 18px;
+            border-radius: 16px;
+            backdrop-filter: blur(10px);
+            transition: all 0.25s ease;
+        }
+
+        .feature-card:hover {
+            background: var(--bg-card-hover);
+            transform: translateY(-2px);
+            border-color: rgba(6, 182, 212, 0.4);
+        }
+
+        .feature-icon {
+            font-size: 1.5rem;
+            margin-bottom: 8px;
+        }
+
+        .feature-card h4 {
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: var(--text-main);
+            margin-bottom: 4px;
+        }
+
+        .feature-card p {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            line-height: 1.4;
+        }
+
+        /* Phone & QR Showcase Card */
+        .showcase-card {
+            background: linear-gradient(180deg, rgba(15, 23, 42, 0.9) 0%, rgba(10, 16, 30, 0.95) 100%);
+            border: 1px solid var(--border-glow);
+            border-radius: 28px;
+            padding: 36px 28px;
+            box-shadow: 0 24px 60px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            text-align: center;
+            position: relative;
+        }
+
+        .showcase-badge {
+            display: inline-block;
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #38BDF8;
+            font-size: 0.78rem;
+            font-weight: 700;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            padding: 6px 14px;
+            border-radius: 9999px;
+            margin-bottom: 24px;
+        }
+
+        .qr-wrapper {
+            background: #FFFFFF;
+            width: 200px;
+            height: 200px;
+            margin: 0 auto 24px;
+            border-radius: 20px;
+            padding: 14px;
+            box-shadow: 0 12px 32px rgba(0, 0, 0, 0.4);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .qr-wrapper img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        .showcase-card h3 {
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .showcase-card p {
+            font-size: 0.88rem;
+            color: var(--text-muted);
+            line-height: 1.5;
+            max-width: 320px;
+            margin: 0 auto 24px;
+        }
+
+        /* Step by step install guide */
+        .install-steps {
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 16px;
+            padding: 18px 20px;
+            text-align: left;
+        }
+
+        .step-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        .step-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .step-num {
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            background: var(--aqua-primary);
+            color: #070e17;
+            font-weight: 800;
+            font-size: 0.75rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            margin-top: 1px;
+        }
+
+        .step-item span {
+            font-size: 0.82rem;
+            color: var(--text-muted);
+            line-height: 1.4;
+        }
+
+        .step-item span strong {
+            color: var(--text-main);
+        }
+
+        /* Footer */
+        footer {
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            padding: 32px 8%;
+            text-align: center;
+            font-size: 0.85rem;
+            color: #64748B;
+        }
+
+        footer a {
+            color: var(--aqua-primary);
+            text-decoration: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="ambient-sphere sphere-1"></div>
+    <div class="ambient-sphere sphere-2"></div>
+
+    <header>
+        <a href="#" class="brand">
+            <div class="brand-icon">🐠</div>
+            <div class="brand-text">
+                <h1>NATURALITOS</h1>
+                <p>Pet Shop & Acuario</p>
+            </div>
+        </a>
+        <div class="header-badge">
+            <span class="status-dot"></span>
+            Hostinger Cloud Online
+        </div>
+    </header>
+
+    <main class="container">
+        <!-- Left Column: App Description & Download Button -->
+        <div>
+            <div class="hero-tag">
+                <span>✨ Nueva Versión 6.0</span>
+                <span>•</span>
+                <span>Sincronización en la Nube</span>
+            </div>
+
+            <h2 class="hero-title">
+                Gestiona tu Acuario en tiempo real desde <span>tu móvil</span>.
+            </h2>
+
+            <p class="hero-desc">
+                La aplicación oficial de punto de venta e inventario para Naturalitos Acuario. Registra tickets, monitorea ventas, consulta ganancias y controla tu stock de peces y accesorios en cualquier lugar.
+            </p>
+
+            <div class="download-action-box">
+                <a id="downloadBtn" href="/public/naturalitos-acuario-v6.apk" class="btn-download" download>
+                    <svg viewBox="0 0 24 24">
+                        <path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM17 13l-5 5-5-5h3V9h4v4h3z"/>
+                    </svg>
+                    Descargar APK para Android
+                </a>
+
+                <div class="meta-info">
+                    <div class="meta-item">
+                        <span>📦</span>
+                        <span>Versión: <strong>6.0 (Cloud Edition)</strong></span>
+                    </div>
+                    <div class="meta-item">
+                        <span>⚖️</span>
+                        <span>Tamaño: <strong>~19.5 MB</strong></span>
+                    </div>
+                    <div class="meta-item">
+                        <span>🤖</span>
+                        <span>Requisito: <strong>Android 8.0 o superior</strong></span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Features Highlights -->
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">🧾</div>
+                    <h4>Tickets de Venta</h4>
+                    <p>Emisión inmediata, desglose de artículos, métodos de pago y eliminación física para administración.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🐟</div>
+                    <h4>Inventario & Stock</h4>
+                    <p>Control de peces vivos, plantas, filtros y alimentos con alertas de stock bajo y márgenes de ganancia.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">📈</div>
+                    <h4>Reportes Financieros</h4>
+                    <p>Ganancia neta en vivo, ingresos vs. egresos, filtros por período y ranking de productos más vendidos.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">☁️</div>
+                    <h4>Hostinger Cloud Sync</h4>
+                    <p>Opera con datos móviles o Wi-Fi. Toda la información respaldada en MySQL en tiempo real.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Column: QR Code & Fast Install Steps -->
+        <div>
+            <div class="showcase-card">
+                <div class="showcase-badge">Escanear para instalar</div>
+                
+                <div class="qr-wrapper">
+                    <!-- QR Code Generated Dynamically for the Download URL -->
+                    <img id="qrImage" src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=https://gold-gorilla-627982.hostingersite.com/public/naturalitos-acuario-v6.apk&bgcolor=ffffff&color=070e17" alt="QR Descarga Naturalitos Acuario">
+                </div>
+
+                <h3>Instala directamente en tu celular</h3>
+                <p>Apunta la cámara de tu teléfono al código QR para comenzar la descarga inmediata del archivo APK.</p>
+
+                <div class="install-steps">
+                    <div class="step-item">
+                        <div class="step-num">1</div>
+                        <span>Descarga el archivo <strong>naturalitos-acuario-v6.apk</strong>.</span>
+                    </div>
+                    <div class="step-item">
+                        <div class="step-num">2</div>
+                        <span>Si tu navegador lo solicita, pulsa <strong>"Permitir desde esta fuente"</strong>.</span>
+                    </div>
+                    <div class="step-item">
+                        <div class="step-num">3</div>
+                        <span>Toca en <strong>Instalar</strong> y ¡listo para abrir la app!</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <p>© 2026 Naturalitos Acuario - Todos los derechos reservados. Desarrollado para gestión comercial móvil.</p>
+    </footer>
+
+    <script>
+        // Adjust APK and QR links dynamically based on the current host/path
+        document.addEventListener('DOMContentLoaded', () => {
+            const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+            let apkDirectUrl = '';
+
+            if (isLocal) {
+                apkDirectUrl = window.location.origin + '/naturalitosAndroid/naturalitos-acuario-v6.apk';
+            } else {
+                // Hostinger Cloud Server
+                apkDirectUrl = window.location.origin + '/public/naturalitos-acuario-v6.apk';
+            }
+
+            const downloadBtn = document.getElementById('downloadBtn');
+            if (downloadBtn) {
+                downloadBtn.href = apkDirectUrl;
+            }
+
+            const qrImg = document.getElementById('qrImage');
+            if (qrImg) {
+                qrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(apkDirectUrl)}&bgcolor=ffffff&color=070e17`;
+            }
+        });
+    </script>
+</body>
+</html>

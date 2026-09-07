@@ -21,6 +21,26 @@ use Psr\Http\Message\ServerRequestInterface as Request;
  */
 return function (App $app) {
 
+    // ── Página de Descarga Web ───────────────────────
+    $app->get('/download', function (Request $request, Response $response) {
+        $htmlPath = __DIR__ . '/../../index.html';
+        if (file_exists($htmlPath)) {
+            $response->getBody()->write(file_get_contents($htmlPath));
+            return $response->withHeader('Content-Type', 'text/html; charset=UTF-8');
+        }
+        $response->getBody()->write("Página de descarga no disponible");
+        return $response->withStatus(404);
+    });
+
+    $app->get('/', function (Request $request, Response $response) {
+        $htmlPath = __DIR__ . '/../../index.html';
+        if (file_exists($htmlPath)) {
+            $response->getBody()->write(file_get_contents($htmlPath));
+            return $response->withHeader('Content-Type', 'text/html; charset=UTF-8');
+        }
+        return $response->withHeader('Location', '/download')->withStatus(302);
+    });
+
     // ── Health Check ─────────────────────────────────
     $app->get('/api/health', function (Request $request, Response $response) {
         $response->getBody()->write(json_encode([

@@ -36,8 +36,15 @@ $container = $containerBuilder->build();
 AppFactory::setContainer($container);
 $app = AppFactory::create();
 
-// ── Base Path (para subdirectorio en XAMPP) ──────────
-$app->setBasePath('/naturalitosAndroid/backend/public');
+// ── Base Path Dinámico (compatible con XAMPP y Hostinger) ──────────
+$basePath = $_ENV['APP_BASE_PATH'] ?? null;
+if ($basePath === null) {
+    $scriptDir = str_replace('\\', '/', dirname($_SERVER['SCRIPT_NAME'] ?? ''));
+    $basePath = ($scriptDir !== '/' && $scriptDir !== '') ? $scriptDir : '';
+}
+if (!empty($basePath)) {
+    $app->setBasePath($basePath);
+}
 
 // ── Middleware Global ────────────────────────────────
 

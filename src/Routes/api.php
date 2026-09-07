@@ -32,6 +32,33 @@ return function (App $app) {
         return $response->withHeader('Content-Type', 'application/json');
     });
 
+    $app->get('/api/health/db', function (Request $request, Response $response) {
+        $hosts = ['localhost', '127.0.0.1'];
+        $results = [];
+        $dbName = $_ENV['DB_NAME'] ?? ($_ENV['DB_DATABASE'] ?? 'u980038333_natu_app');
+        $dbUser = $_ENV['DB_USER'] ?? ($_ENV['DB_USERNAME'] ?? 'u980038333_natu_app_root');
+        $dbPass = $_ENV['DB_PASS'] ?? ($_ENV['DB_PASSWORD'] ?? '');
+
+        foreach ($hosts as $h) {
+            try {
+                $dsn = "mysql:host=$h;port=3306;dbname=$dbName;charset=utf8mb4";
+                $pdo = new PDO($dsn, $dbUser, $dbPass, [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]);
+                $cnt = $pdo->query("SELECT COUNT(*) FROM usuarios")->fetchColumn();
+                $results[$h] = ['status' => 'CONNECTED', 'usuarios' => (int)$cnt];
+            } catch (Throwable $e) {
+                $results[$h] = ['status' => 'ERROR', 'message' => $e->getMessage()];
+            }
+        }
+
+        $response->getBody()->write(json_encode([
+            'db_name' => $dbName,
+            'db_user' => $dbUser,
+            'pass_length' => strlen($dbPass),
+            'results' => $results
+        ], JSON_PRETTY_PRINT));
+        return $response->withHeader('Content-Type', 'application/json');
+    });
+
     // ── Rutas Públicas (sin JWT) ─────────────────────
     $app->group('/api/auth', function (RouteCollectorProxy $group) {
         $group->post('/login', function (Request $request, Response $response) {

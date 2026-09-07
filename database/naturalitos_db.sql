@@ -4,12 +4,12 @@
 -- Inventario y Reportes de Ganancias
 -- ============================================
 
-DROP DATABASE IF EXISTS naturalitos_movil_db;
-CREATE DATABASE naturalitos_movil_db
-  CHARACTER SET utf8mb4
-  COLLATE utf8mb4_unicode_ci;
+-- DROP DATABASE IF EXISTS naturalitos_movil_db;
+-- CREATE DATABASE naturalitos_movil_db
+--   CHARACTER SET utf8mb4
+--   COLLATE utf8mb4_unicode_ci;
 
-USE naturalitos_movil_db;
+-- USE naturalitos_movil_db;
 
 -- ============================================
 -- TABLA: usuarios

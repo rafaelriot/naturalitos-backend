@@ -79,6 +79,189 @@ return function (App $app) {
         return $response->withHeader('Content-Type', 'application/json');
     });
 
+    // ── DEBUG TEMPORAL - ELIMINAR DESPUÉS DEL DIAGNÓSTICO ──────────
+    // Endpoint 1: Verificar que tablas y datos existen en la DB
+    $app->get('/api/debug/catalogo', function (Request $request, Response $response) {
+        $results = ['timestamp' => date('Y-m-d H:i:s'), 'checks' => []];
+
+        try {
+            $db = \App\Config\Database::getInstance()->getConnection();
+            $results['db_connection'] = 'OK';
+
+            // Verificar que las tablas existen
+            $tables = ['usuarios', 'categorias', 'productos', 'tickets_venta', 'ticket_detalle',
+                        'facturas_compra', 'factura_detalle', 'movimientos_inventario', 'ingresos_gastos'];
+            foreach ($tables as $table) {
+                try {
+                    $cnt = $db->query("SELECT COUNT(*) FROM {$table}")->fetchColumn();
+                    $results['checks'][$table] = ['exists' => true, 'count' => (int)$cnt];
+                } catch (\Throwable $e) {
+                    $results['checks'][$table] = ['exists' => false, 'error' => $e->getMessage()];
+                }
+            }
+
+            // Muestra de categorías
+            try {
+                $cats = $db->query("SELECT id, nombre, activo FROM categorias ORDER BY id")->fetchAll();
+                $results['categorias_sample'] = $cats;
+            } catch (\Throwable $e) {
+                $results['categorias_sample'] = ['error' => $e->getMessage()];
+            }
+
+            // Muestra de productos (primeros 5)
+            try {
+                $prods = $db->query("SELECT id, sku, nombre, categoria_id, precio_venta, stock_actual, activo FROM productos ORDER BY id LIMIT 5")->fetchAll();
+                $results['productos_sample'] = $prods;
+            } catch (\Throwable $e) {
+                $results['productos_sample'] = ['error' => $e->getMessage()];
+            }
+
+        } catch (\Throwable $e) {
+            $results['db_connection'] = 'ERROR: ' . $e->getMessage();
+        }
+
+        $response->getBody()->write(json_encode($results, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
+        return $response->withHeader('Content-Type', 'application/json');
+    });
+
+    // Endpoint 2: Verificar URLs y base path
+    $app->get('/api/debug/urls', function (Request $request, Response $response) {
+        $scriptDir = str_replace('\\', '/', dirname($_SERVER['SCRIPT_NAME'] ?? ''));
+        $basePath = $_ENV['APP_BASE_PATH'] ?? null;
+        $calculatedBase = ($scriptDir !== '/' && $scriptDir !== '') ? $scriptDir : '';
+
+        $results = [
+            'server' => [
+                'SCRIPT_NAME' => $_SERVER['SCRIPT_NAME'] ?? 'NOT SET',
+                'SCRIPT_FILENAME' => $_SERVER['SCRIPT_FILENAME'] ?? 'NOT SET',
+                'DOCUMENT_ROOT' => $_SERVER['DOCUMENT_ROOT'] ?? 'NOT SET',
+                'REQUEST_URI' => $_SERVER['REQUEST_URI'] ?? 'NOT SET',
+                'SERVER_NAME' => $_SERVER['SERVER_NAME'] ?? 'NOT SET',
+                'HTTPS' => $_SERVER['HTTPS'] ?? 'NOT SET',
+            ],
+            'slim_basepath' => [
+                'APP_BASE_PATH_env' => $basePath ?? 'NOT SET (using auto-detect)',
+                'calculated_base' => $calculatedBase,
+                'effective_base' => $basePath ?? $calculatedBase,
+            ],
+            'expected_urls' => [
+                'login' => ($basePath ?? $calculatedBase) . '/api/auth/login',
+                'productos' => ($basePath ?? $calculatedBase) . '/api/productos',
+                'categorias' => ($basePath ?? $calculatedBase) . '/api/categorias',
+            ],
+            'android_base_url' => 'https://gold-gorilla-627982.hostingersite.com/public/api/',
+            'android_would_call' => [
+                'login' => 'https://gold-gorilla-627982.hostingersite.com/public/api/auth/login',
+                'productos' => 'https://gold-gorilla-627982.hostingersite.com/public/api/productos',
+                'categorias' => 'https://gold-gorilla-627982.hostingersite.com/public/api/categorias',
+            ],
+        ];
+
+        $response->getBody()->write(json_encode($results, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
+        return $response->withHeader('Content-Type', 'application/json');
+    });
+
+    // Endpoint 3: Test completo de flujo auth → catálogo
+    $app->get('/api/debug/auth-test', function (Request $request, Response $response) {
+        $results = ['timestamp' => date('Y-m-d H:i:s'), 'steps' => []];
+
+        try {
+            $db = \App\Config\Database::getInstance()->getConnection();
+
+            // Step 1: Verificar usuario admin existe
+            $stmt = $db->prepare("SELECT id, nombre, email, rol, password_hash FROM usuarios WHERE email = :email");
+            $stmt->execute(['email' => 'admin@naturalitos.com']);
+            $user = $stmt->fetch();
+
+            if ($user) {
+                $results['steps']['1_find_admin'] = [
+                    'status' => 'OK',
+                    'user_id' => $user['id'],
+                    'nombre' => $user['nombre'],
+                    'rol' => $user['rol'],
+                    'hash_length' => strlen($user['password_hash']),
+                ];
+
+                // Step 2: Verificar password
+                $passOk = password_verify('admin123', $user['password_hash']);
+                $results['steps']['2_verify_password'] = [
+                    'status' => $passOk ? 'OK' : 'FAIL',
+                    'message' => $passOk ? 'Password admin123 es correcto' : 'Password admin123 NO coincide con el hash',
+                ];
+
+                // Step 3: Generar JWT
+                if ($passOk) {
+                    try {
+                        $secret = $_ENV['JWT_SECRET'] ?? 'NOT_SET';
+                        $algorithm = $_ENV['JWT_ALGORITHM'] ?? 'HS256';
+
+                        $payload = [
+                            'sub' => $user['id'],
+                            'email' => $user['email'],
+                            'nombre' => $user['nombre'],
+                            'rol' => $user['rol'],
+                            'iat' => time(),
+                            'exp' => time() + 86400,
+                        ];
+
+                        $token = \Firebase\JWT\JWT::encode($payload, $secret, $algorithm);
+                        $results['steps']['3_generate_jwt'] = [
+                            'status' => 'OK',
+                            'token_length' => strlen($token),
+                            'token_preview' => substr($token, 0, 50) . '...',
+                            'jwt_secret_length' => strlen($secret),
+                        ];
+
+                        // Step 4: Decodificar JWT para verificar
+                        try {
+                            $decoded = \Firebase\JWT\JWT::decode($token, new \Firebase\JWT\Key($secret, $algorithm));
+                            $results['steps']['4_decode_jwt'] = [
+                                'status' => 'OK',
+                                'sub' => $decoded->sub,
+                                'email' => $decoded->email,
+                                'rol' => $decoded->rol,
+                            ];
+                        } catch (\Throwable $e) {
+                            $results['steps']['4_decode_jwt'] = ['status' => 'ERROR', 'message' => $e->getMessage()];
+                        }
+
+                    } catch (\Throwable $e) {
+                        $results['steps']['3_generate_jwt'] = ['status' => 'ERROR', 'message' => $e->getMessage()];
+                    }
+                }
+            } else {
+                $results['steps']['1_find_admin'] = [
+                    'status' => 'FAIL',
+                    'message' => 'No se encontró usuario admin@naturalitos.com - ¿Se ejecutó el SQL seed?'
+                ];
+
+                // Listar usuarios que sí existen
+                $allUsers = $db->query("SELECT id, email, rol FROM usuarios")->fetchAll();
+                $results['steps']['1b_existing_users'] = $allUsers;
+            }
+
+            // Step 5: Query directa de productos (sin JWT)
+            try {
+                $prodCount = $db->query("SELECT COUNT(*) FROM productos WHERE activo = 1")->fetchColumn();
+                $catCount = $db->query("SELECT COUNT(*) FROM categorias WHERE activo = 1")->fetchColumn();
+                $results['steps']['5_direct_query'] = [
+                    'status' => 'OK',
+                    'productos_activos' => (int)$prodCount,
+                    'categorias_activas' => (int)$catCount,
+                ];
+            } catch (\Throwable $e) {
+                $results['steps']['5_direct_query'] = ['status' => 'ERROR', 'message' => $e->getMessage()];
+            }
+
+        } catch (\Throwable $e) {
+            $results['db_error'] = $e->getMessage();
+        }
+
+        $response->getBody()->write(json_encode($results, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
+        return $response->withHeader('Content-Type', 'application/json');
+    });
+    // ── FIN DEBUG TEMPORAL ─────────────────────────────────────
+
     // ── Rutas Públicas (sin JWT) ─────────────────────
     $app->group('/api/auth', function (RouteCollectorProxy $group) {
         $group->post('/login', function (Request $request, Response $response) {
